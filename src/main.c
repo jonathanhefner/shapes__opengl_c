@@ -11,7 +11,7 @@
 
 #define MAX_FACES 1024
 /* current number of faces */
-static int faces = 3;
+static int faces = 5;
 /* unit circle coords for start of each face + repitition of the first coord at end to complete the loop */
 static float faces_coords[MAX_FACES + 1][2];
 
@@ -96,13 +96,20 @@ void draw_square() {
 }
 
 
-static void draw() {
+static void draw(double delta_time) {
+  static float rotate_x = 0;
+  static float rotate_y = 0;
+
   glLoadIdentity();
   gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glLineWidth(3.0f);
 
+  rotate_x += .1 * 360 * delta_time;
+  glRotatef(rotate_x, 1, 0, 0);
+  rotate_y += .2 * 360 * delta_time;
+  glRotatef(rotate_y, 0, 1, 0);
   draw_pyramid();
 }
 
@@ -118,6 +125,9 @@ static void window_reshape(int width, int height) {
 
 
 int main() {
+  double prev_time;
+  double time;
+
   if(!glfwInit() || !glfwOpenWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 0, 0, GLFW_WINDOW)) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -129,10 +139,15 @@ int main() {
   
   /* draw while the Esc key hasn't been pressed and the window is open */
   glMatrixMode(GL_MODELVIEW);
+  prev_time = glfwGetTime();
   while(!glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED)) {
+    time = glfwGetTime();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    draw();
+    draw(time - prev_time);
     glfwSwapBuffers();
+
+    prev_time = time;
   }
 
   glfwTerminate();
