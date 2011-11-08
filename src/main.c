@@ -9,12 +9,35 @@
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
+
+/***** Settings *****/
+
+int use_wireframe = 0;
+
 #define MAX_FACES 1024
 /* current number of faces */
 static int faces = 5;
 /* unit circle coords for start of each face + repitition of the first coord at end to complete the loop */
 static float faces_coords[MAX_FACES + 1][2];
 
+
+
+static void handle_keyboard(int key, int action) {
+  if (action == GLFW_PRESS) {
+    switch (key) {
+      case 'W':
+      case 'w':
+        use_wireframe = !use_wireframe;
+        if (use_wireframe) {
+          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+          glLineWidth(3.0f);
+        } else {
+          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        break;
+    }
+  }
+}
 
 
 static void compute_faces() {
@@ -103,9 +126,6 @@ static void draw(double delta_time) {
   glLoadIdentity();
   gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
 
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glLineWidth(3.0f);
-
   rotate_x += .1 * 360 * delta_time;
   glRotatef(rotate_x, 1, 0, 0);
   rotate_y += .2 * 360 * delta_time;
@@ -136,6 +156,9 @@ int main() {
   glfwSetWindowTitle("Shapes Demo");
   glfwSetWindowSizeCallback(window_reshape);
   window_reshape(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+  glfwEnable(GLFW_KEY_REPEAT);
+  glfwSetCharCallback(handle_keyboard);
   
   /* draw while the Esc key hasn't been pressed and the window is open */
   glMatrixMode(GL_MODELVIEW);
