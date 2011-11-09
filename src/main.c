@@ -8,53 +8,64 @@
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
+#define MAX_CARDINALITY 42
+
+
+/* unit circle coords for start of each face + repitition of the first coord at end to complete the loop */
+static float unit_circle_coords[MAX_CARDINALITY + 1][2];
 
 
 /***** Settings *****/
+static int wireframe = 0;
+static int cardinality = 3;
 
-int use_wireframe = 0;
 
-#define MAX_FACES 1024
-/* current number of faces */
-static int faces = 5;
-/* unit circle coords for start of each face + repitition of the first coord at end to complete the loop */
-static float faces_coords[MAX_FACES + 1][2];
 
+static void set_cardinality(int n) {
+  int i;
+
+  if (n >= 3 && n <= MAX_CARDINALITY) {
+    for (i = 0; i < n; i += 1) {
+      unit_circle_coords[i][0] = sinf((2.0f * PI * i) / n);
+      unit_circle_coords[i][1] = cosf((2.0f * PI * i) / n);
+    }
+
+    /* add the first coord as the final to complete the loop */
+    unit_circle_coords[n][0] = unit_circle_coords[0][0];
+    unit_circle_coords[n][1] = unit_circle_coords[0][1];
+
+    cardinality = n;
+  }
+}
+
+
+static void set_wireframe(int enable) {
+  if (enable) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(3.0f);
+  } else {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+
+  wireframe = enable;
+}
 
 
 static void handle_keyboard(int key, int action) {
   if (action == GLFW_PRESS) {
     switch (key) {
       case 'W':
-      case 'w':
-        use_wireframe = !use_wireframe;
-        if (use_wireframe) {
-          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-          glLineWidth(3.0f);
-        } else {
-          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
+        set_wireframe(!wireframe);
+        break;
+
+      case GLFW_KEY_UP:
+        set_cardinality(cardinality + 1);
+        break;
+
+      case GLFW_KEY_DOWN:
+        set_cardinality(cardinality - 1);
         break;
     }
-  }
-}
-
-
-static void compute_faces() {
-  static int prev_faces = -1;
-  int i;
-
-  if (faces != prev_faces) {
-    for (i = 0; i < faces; i += 1) {
-      faces_coords[i][0] = sinf((2.0f * PI * i) / faces);
-      faces_coords[i][1] = cosf((2.0f * PI * i) / faces);
-    }
-
-    /* add the first coord as the final to complete the loop */
-    faces_coords[faces][0] = faces_coords[0][0];
-    faces_coords[faces][1] = faces_coords[0][1];
-
-    prev_faces = faces;
   }
 }
 
@@ -63,23 +74,21 @@ void draw_prism() {
   int i;
   int y;
 
-  compute_faces();
-
   /* draw top and bottom */
   for (y = 1; y >= -1; y -= 2) {
     glBegin(GL_TRIANGLE_FAN);
       glVertex3f(0, y, 0);
-      for (i = 0; i <= faces; i += 1) {
-        glVertex3f(faces_coords[i][0], y, faces_coords[i][1]);
+      for (i = 0; i <= cardinality; i += 1) {
+        glVertex3f(unit_circle_coords[i][0], y, unit_circle_coords[i][1]);
       }
     glEnd();
   }
 
   /* draw sides */
   glBegin(GL_TRIANGLE_STRIP);
-    for (i = 0; i <= faces; i += 1) {
-      glVertex3f(faces_coords[i][0], 1, faces_coords[i][1]);
-      glVertex3f(faces_coords[i][0], -1, faces_coords[i][1]);
+    for (i = 0; i <= cardinality; i += 1) {
+      glVertex3f(unit_circle_coords[i][0], 1, unit_circle_coords[i][1]);
+      glVertex3f(unit_circle_coords[i][0], -1, unit_circle_coords[i][1]);
     }
   glEnd();
 }
@@ -88,33 +97,20 @@ void draw_prism() {
 void draw_pyramid() {
   int i;
 
-  compute_faces();
-
   /* draw base */
   glBegin(GL_TRIANGLE_FAN);
     glVertex3f(0, -1, 0);
-    for (i = 0; i <= faces; i += 1) {
-      glVertex3f(faces_coords[i][0], -1, faces_coords[i][1]);
+    for (i = 0; i <= cardinality; i += 1) {
+      glVertex3f(unit_circle_coords[i][0], -1, unit_circle_coords[i][1]);
     }
   glEnd();
 
   /* draw conic top */
   glBegin(GL_TRIANGLE_FAN);
     glVertex3f(0, 1, 0);
-    for (i = 0; i <= faces; i += 1) {
-      glVertex3f(faces_coords[i][0], -1, faces_coords[i][1]);
+    for (i = 0; i <= cardinality; i += 1) {
+      glVertex3f(unit_circle_coords[i][0], -1, unit_circle_coords[i][1]);
     }
-  glEnd();
-}
-
-
-
-void draw_square() {
-  glBegin(GL_QUADS);
-    glVertex3f(0, 0, 0);
-    glVertex3f(1, 0, 0);
-    glVertex3f(1, 1, 0);
-    glVertex3f(0, 1, 0);
   glEnd();
 }
 
@@ -152,16 +148,17 @@ int main() {
     glfwTerminate();
     exit(EXIT_FAILURE);
   }
-  
+
   glfwSetWindowTitle("Shapes Demo");
   glfwSetWindowSizeCallback(window_reshape);
   window_reshape(WINDOW_WIDTH, WINDOW_HEIGHT);
 
   glfwEnable(GLFW_KEY_REPEAT);
-  glfwSetCharCallback(handle_keyboard);
+  glfwSetKeyCallback(handle_keyboard);
   
   /* draw while the Esc key hasn't been pressed and the window is open */
   glMatrixMode(GL_MODELVIEW);
+  set_cardinality(cardinality);
   prev_time = glfwGetTime();
   while(!glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED)) {
     time = glfwGetTime();
