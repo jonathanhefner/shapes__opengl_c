@@ -1,24 +1,66 @@
 #include <GL/glfw.h>
 #include <math.h>
 #include <stdlib.h>
+#include "shape.h"
 
 #ifndef PI
   #define PI 3.14159
 #endif
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
 #define MAX_CARDINALITY 42
 
 
-/* unit circle coords for start of each face + repitition of the first coord at end to complete the loop */
-static float unit_circle_coords[MAX_CARDINALITY + 1][2];
+static Shape* shape = NULL;
 
 
 /***** Settings *****/
 static int wireframe = 0;
 static int cardinality = 3;
+/* coords around a unit polygon (a unit "circle" with cardinality faces, instead of infinite) */
+static float unit_x[MAX_CARDINALITY + 1];
+static float unit_y[MAX_CARDINALITY + 1];
 
+
+
+static void set_wireframe(int enable) {
+  glPolygonMode(GL_FRONT_AND_BACK, enable ? GL_LINE : GL_FILL);
+  wireframe = enable;
+}
+
+
+void shape_pyramid() {
+  const int TOP = 0; const int BTM = 1;
+  int i;
+
+  shape = shape_define(shape, 3, /*TOP*/ GL_TRIANGLE_FAN, (cardinality + 1) + 1,
+                                 /*BTM*/ GL_TRIANGLE_FAN, (cardinality + 1) + 1);
+
+  shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
+  shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
+  for (i = 0; i < cardinality + 1; i += 1) {
+    shape_position_vertex(shape, TOP, i + 1, unit_x[i], -1.0, unit_y[i]);
+    shape_position_vertex(shape, BTM, i + 1, unit_x[i], -1.0, unit_y[i]);
+  }
+}
+
+
+void shape_prism() {
+  const int TOP = 0; const int BTM = 1; const int SIDES = 2;
+  int i;
+
+  shape = shape_define(shape, 3, /*TOP*/ GL_TRIANGLE_FAN, (cardinality + 1) + 1,
+                                 /*BTM*/ GL_TRIANGLE_FAN, (cardinality + 1) + 1,
+                                 /*SIDES*/ GL_TRIANGLE_STRIP, (cardinality + 1) * 2);
+
+  shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
+  shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
+  for (i = 0; i < cardinality + 1; i += 1) {
+    shape_position_vertex(shape, TOP, i + 1, unit_x[i], 1.0, unit_y[i]);
+    shape_position_vertex(shape, BTM, i + 1, unit_x[i], -1.0, unit_y[i]);
+    shape_position_vertex(shape, SIDES, i * 2, unit_x[i], 1.0, unit_y[i]);
+    shape_position_vertex(shape, SIDES, (i * 2) + 1, unit_x[i], -1.0, unit_y[i]);
+  }
+}
 
 
 static void set_cardinality(int n) {
@@ -26,28 +68,17 @@ static void set_cardinality(int n) {
 
   if (n >= 3 && n <= MAX_CARDINALITY) {
     for (i = 0; i < n; i += 1) {
-      unit_circle_coords[i][0] = sinf((2.0f * PI * i) / n);
-      unit_circle_coords[i][1] = cosf((2.0f * PI * i) / n);
+      unit_x[i] = sinf((2.0f * PI * i) / n);
+      unit_y[i] = cosf((2.0f * PI * i) / n);
     }
 
     /* add the first coord as the final to complete the loop */
-    unit_circle_coords[n][0] = unit_circle_coords[0][0];
-    unit_circle_coords[n][1] = unit_circle_coords[0][1];
+    unit_x[n] = unit_x[0];
+    unit_y[n] = unit_y[0];
 
     cardinality = n;
+    shape_pyramid();
   }
-}
-
-
-static void set_wireframe(int enable) {
-  if (enable) {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(3.0f);
-  } else {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  }
-
-  wireframe = enable;
 }
 
 
@@ -70,51 +101,6 @@ static void handle_keyboard(int key, int action) {
 }
 
 
-void draw_prism() {
-  int i;
-  int y;
-
-  /* draw top and bottom */
-  for (y = 1; y >= -1; y -= 2) {
-    glBegin(GL_TRIANGLE_FAN);
-      glVertex3f(0, y, 0);
-      for (i = 0; i <= cardinality; i += 1) {
-        glVertex3f(unit_circle_coords[i][0], y, unit_circle_coords[i][1]);
-      }
-    glEnd();
-  }
-
-  /* draw sides */
-  glBegin(GL_TRIANGLE_STRIP);
-    for (i = 0; i <= cardinality; i += 1) {
-      glVertex3f(unit_circle_coords[i][0], 1, unit_circle_coords[i][1]);
-      glVertex3f(unit_circle_coords[i][0], -1, unit_circle_coords[i][1]);
-    }
-  glEnd();
-}
-
-
-void draw_pyramid() {
-  int i;
-
-  /* draw base */
-  glBegin(GL_TRIANGLE_FAN);
-    glVertex3f(0, -1, 0);
-    for (i = 0; i <= cardinality; i += 1) {
-      glVertex3f(unit_circle_coords[i][0], -1, unit_circle_coords[i][1]);
-    }
-  glEnd();
-
-  /* draw conic top */
-  glBegin(GL_TRIANGLE_FAN);
-    glVertex3f(0, 1, 0);
-    for (i = 0; i <= cardinality; i += 1) {
-      glVertex3f(unit_circle_coords[i][0], -1, unit_circle_coords[i][1]);
-    }
-  glEnd();
-}
-
-
 static void draw(double delta_time) {
   static float rotate_x = 0;
   static float rotate_y = 0;
@@ -126,7 +112,7 @@ static void draw(double delta_time) {
   glRotatef(rotate_x, 1, 0, 0);
   rotate_y += .2 * 360 * delta_time;
   glRotatef(rotate_y, 0, 1, 0);
-  draw_pyramid();
+  shape_draw(shape);
 }
 
 
@@ -144,14 +130,14 @@ int main() {
   double prev_time;
   double time;
 
-  if(!glfwInit() || !glfwOpenWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 0, 0, GLFW_WINDOW)) {
+  if(!glfwInit() || !glfwOpenWindow(640, 480, 0, 0, 0, 0, 0, 0, GLFW_WINDOW)) {
     glfwTerminate();
     exit(EXIT_FAILURE);
   }
 
   glfwSetWindowTitle("Shapes Demo");
   glfwSetWindowSizeCallback(window_reshape);
-  window_reshape(WINDOW_WIDTH, WINDOW_HEIGHT);
+  window_reshape(640, 480);
 
   glfwEnable(GLFW_KEY_REPEAT);
   glfwSetKeyCallback(handle_keyboard);
