@@ -40,7 +40,7 @@ void shape_pyramid() {
   const int TOP = 0; const int BTM = 1;
   int i;
 
-  shape = shape_define(shape, 3, /*TOP*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1,
+  shape = shape_define(shape, 2, /*TOP*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1,
                                  /*BTM*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1);
 
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
