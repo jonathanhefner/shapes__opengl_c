@@ -77,8 +77,8 @@ static void set_shape(ShapeType type, int cardinality) {
   if (type >= 0 && type <= MAX_SHAPE_TYPE
       && cardinality >= 3 && cardinality <= MAX_CARDINALITY) {
     for (i = 0; i < cardinality; i += 1) {
-      unit_x[i] = sinf((2.0f * PI * i) / cardinality);
-      unit_y[i] = cosf((2.0f * PI * i) / cardinality);
+      unit_x[i] = cosf((2.0f * PI * i) / cardinality);
+      unit_y[i] = sinf((2.0f * PI * i) / cardinality);
     }
 
     /* add the first coord as the final to complete the loop */
