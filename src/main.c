@@ -7,6 +7,10 @@
   #define PI 3.14159
 #endif
 
+/* computes coords of Ith point on a unit "circle" with N faces */
+#define UNIT_X(FACE_I, FACE_N) (cosf((2.0f * PI * FACE_I) / FACE_N))
+#define UNIT_Y(FACE_I, FACE_N) (sinf((2.0f * PI * FACE_I) / FACE_N))
+
 
 typedef enum _ShapeType {
   SHAPE_PYRAMID,
@@ -24,9 +28,6 @@ static Shape* shape = NULL;
 static int wireframe = 0;
 static ShapeType shape_type = SHAPE_PYRAMID;
 static int shape_cardinality = 3;
-/* coords around a unit polygon (a unit "circle" with shape_cardinality faces, instead of infinite) */
-static float unit_x[MAX_CARDINALITY + 1];
-static float unit_y[MAX_CARDINALITY + 1];
 
 
 
@@ -36,67 +37,55 @@ static void set_wireframe(int enable) {
 }
 
 
-void shape_pyramid() {
+void shape_pyramid(int n) {
   const int TOP = 0; const int BTM = 1;
   int i;
 
-  shape = shape_define(shape, 2, /*TOP*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1,
-                                 /*BTM*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1);
+  shape = shape_define(shape, 2, /*TOP*/ GL_TRIANGLE_FAN, (n + 1) + 1,
+                                 /*BTM*/ GL_TRIANGLE_FAN, (n + 1) + 1);
 
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
-  for (i = 0; i < shape_cardinality + 1; i += 1) {
-    shape_position_vertex(shape, TOP, i + 1, unit_x[i], -1.0, unit_y[i]);
-    shape_position_vertex(shape, BTM, i + 1, unit_x[i], -1.0, unit_y[i]);
+  for (i = 0; i < n + 1; i += 1) {
+    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, BTM, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
   }
 }
 
 
-void shape_prism() {
+void shape_prism(int n) {
   const int TOP = 0; const int BTM = 1; const int SIDES = 2;
   int i;
 
-  shape = shape_define(shape, 3, /*TOP*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1,
-                                 /*BTM*/ GL_TRIANGLE_FAN, (shape_cardinality + 1) + 1,
-                                 /*SIDES*/ GL_TRIANGLE_STRIP, (shape_cardinality + 1) * 2);
+  shape = shape_define(shape, 3, /*TOP*/ GL_TRIANGLE_FAN, (n + 1) + 1,
+                                 /*BTM*/ GL_TRIANGLE_FAN, (n + 1) + 1,
+                                 /*SIDES*/ GL_TRIANGLE_STRIP, (n + 1) * 2);
 
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
-  for (i = 0; i < shape_cardinality + 1; i += 1) {
-    shape_position_vertex(shape, TOP, i + 1, unit_x[i], 1.0, unit_y[i]);
-    shape_position_vertex(shape, BTM, i + 1, unit_x[i], -1.0, unit_y[i]);
-    shape_position_vertex(shape, SIDES, i * 2, unit_x[i], 1.0, unit_y[i]);
-    shape_position_vertex(shape, SIDES, (i * 2) + 1, unit_x[i], -1.0, unit_y[i]);
+  for (i = 0; i < n + 1; i += 1) {
+    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, BTM, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
   }
 }
 
 
 static void set_shape(ShapeType type, int cardinality) {
-  int i;
-
   if (type >= 0 && type <= MAX_SHAPE_TYPE
       && cardinality >= 3 && cardinality <= MAX_CARDINALITY) {
-    for (i = 0; i < cardinality; i += 1) {
-      unit_x[i] = cosf((2.0f * PI * i) / cardinality);
-      unit_y[i] = sinf((2.0f * PI * i) / cardinality);
-    }
-
-    /* add the first coord as the final to complete the loop */
-    unit_x[cardinality] = unit_x[0];
-    unit_y[cardinality] = unit_y[0];
-
-    shape_cardinality = cardinality;
-
     switch (type) {
       case SHAPE_PYRAMID:
-        shape_pyramid();
+        shape_pyramid(cardinality);
         break;
       case SHAPE_PRISM:
-        shape_prism();
+        shape_prism(cardinality);
         break;
     }
 
     shape_type = type;
+    shape_cardinality = cardinality;
   }
 }
 
