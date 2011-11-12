@@ -8,16 +8,17 @@
 #endif
 
 /* computes coords of Ith point on a unit "circle" with N faces */
-#define UNIT_X(FACE_I, FACE_N) (cosf((2.0f * PI * FACE_I) / FACE_N))
-#define UNIT_Y(FACE_I, FACE_N) (sinf((2.0f * PI * FACE_I) / FACE_N))
+#define UNIT_X(FACE_I, FACE_N) (cosf((2.0f * PI * (FACE_I)) / (FACE_N)))
+#define UNIT_Y(FACE_I, FACE_N) (sinf((2.0f * PI * (FACE_I)) / (FACE_N)))
 
 
 typedef enum _ShapeType {
   SHAPE_PYRAMID,
-  SHAPE_PRISM
+  SHAPE_PRISM,
+  SHAPE_ANTIPRISM
 } ShapeType;
 
-#define MAX_SHAPE_TYPE SHAPE_PRISM
+#define MAX_SHAPE_TYPE SHAPE_ANTIPRISM
 #define MAX_CARDINALITY 42
 
 
@@ -72,6 +73,26 @@ void shape_prism(int n) {
 }
 
 
+static void shape_antiprism(int n) {
+  const int TOP = 0; const int BTM = 1; const int SIDES = 2;
+  int i;
+
+  shape = shape_define(shape, 3, /*TOP*/ GL_TRIANGLE_FAN, (n + 1) + 1,
+                                 /*BTM*/ GL_TRIANGLE_FAN, (n + 1) + 1,
+                                 /*SIDES*/ GL_TRIANGLE_STRIP, (n + 1) * 2);
+
+  shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
+  shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
+  for (i = 0; i < n + 1; i += 1) {
+    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i * 2, n * 2), 1.0, UNIT_Y(i * 2, n * 2));
+    shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i * 2, n * 2), 1.0, UNIT_Y(i * 2, n * 2));
+
+    shape_position_vertex(shape, BTM, i + 1, UNIT_X((i * 2) + 1, n * 2), -1.0, UNIT_Y((i * 2) + 1, n * 2));
+    shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X((i * 2) + 1, n * 2), -1.0, UNIT_Y((i * 2) + 1, n * 2));
+  }
+}
+
+
 static void set_shape(ShapeType type, int cardinality) {
   if (type >= 0 && type <= MAX_SHAPE_TYPE
       && cardinality >= 3 && cardinality <= MAX_CARDINALITY) {
@@ -81,6 +102,9 @@ static void set_shape(ShapeType type, int cardinality) {
         break;
       case SHAPE_PRISM:
         shape_prism(cardinality);
+        break;
+      case SHAPE_ANTIPRISM:
+        shape_antiprism(cardinality);
         break;
     }
 
