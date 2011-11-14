@@ -55,15 +55,14 @@ void shape_pyramid(int n) {
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
   for (i = 0; i < n + 1; i += 1) {
-    /* we assign points around top such that it faces outward */
     /* NOTE UNIT_X and UNIT_Y go counter-clockwise around the unit circle, BUT
-        we are using UNIT_Y as our Z value (since we're describing the top face,
-        existing mostly in the XZ plane).  The positive Z-axis comes out towards
-        our camera; thus, when looking upon the top from outside the shape,
-        following UNIT_X, UNIT_Y in-order takes you clockwise around the top.
-        Hence, for the top, we reverse the vertex order. */
+        we are using UNIT_Y as our Z value since we're describing the top and
+        bottom faces, existing (mostly) in the XZ plane.  The positive Z-axis
+        comes out towards our camera; thus, when looking upon the top face from
+        outside the shape, following UNIT_X, UNIT_Y in-order takes you clockwise
+        around the top.  Hence, for the top, we negate UNIT_Y. */
     shape_position_vertex(shape, BTM, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
-    shape_position_vertex(shape, TOP, n + 1 - i, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i, n), -1.0, -UNIT_Y(i, n));
   }
 }
 
@@ -79,11 +78,11 @@ void shape_prism(int n) {
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
   for (i = 0; i < n + 1; i += 1) {
-    /* we assign points around top and sides such that they face outward (see note in shape_pyramid) */
     shape_position_vertex(shape, BTM, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
     shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
 
-    shape_position_vertex(shape, TOP, n + 1 - i, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
+    /* see note in shape_pyramid() for why UNIT_Y is negated for TOP */
+    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i, n), 1.0, -UNIT_Y(i, n));
     shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
   }
 }
@@ -100,11 +99,11 @@ static void shape_antiprism(int n) {
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
   for (i = 0; i < n + 1; i += 1) {
-    /* we assign points around top and sides such that they face outward (see note in shape_pyramid) */
     shape_position_vertex(shape, BTM, i + 1, UNIT_X(i * 2, n * 2), -1.0, UNIT_Y(i * 2, n * 2));
     shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i * 2, n * 2), -1.0, UNIT_Y(i * 2, n * 2));
 
-    shape_position_vertex(shape, TOP, n + 1 - i, UNIT_X((i * 2) + 1, n * 2), 1.0, UNIT_Y((i * 2) + 1, n * 2));
+    /* see note in shape_pyramid() for why UNIT_Y is negated for TOP */
+    shape_position_vertex(shape, TOP, i + 1, UNIT_X((i * 2) + 1, n * 2), 1.0, -UNIT_Y((i * 2) + 1, n * 2));
     shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X((i * 2) + 1, n * 2), 1.0, UNIT_Y((i * 2) + 1, n * 2));
   }
 }
