@@ -7,6 +7,11 @@
   #define PI 3.14159
 #endif
 
+const GLfloat RED[]   = { 10, 0, 0, 1 };
+const GLfloat GREEN[] = { 0, 10, 0, 1 };
+const GLfloat BLUE[]  = { 0, 0, 10, 1 };
+const GLfloat WHITE[] = { 1, 1, 1, 1 };
+
 /* computes coords of Ith point on a unit "circle" with N faces */
 #define UNIT_X(FACE_I, FACE_N) (cosf((2.0f * PI * (FACE_I)) / (FACE_N)))
 #define UNIT_Y(FACE_I, FACE_N) (sinf((2.0f * PI * (FACE_I)) / (FACE_N)))
@@ -22,6 +27,7 @@ typedef enum _ShapeType {
 #define MAX_CARDINALITY 42
 
 
+
 static Shape* shape = NULL;
 
 
@@ -34,9 +40,11 @@ static int shape_cardinality = 3;
 
 static void set_wireframe(int enable) {
   if (enable) {
+    glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   } else {
+    glEnable(GL_LIGHTING);
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
   }
@@ -161,9 +169,14 @@ static void handle_keyboard(int key, int action) {
 static void draw(double delta_time) {
   static float rotate_x = 0;
   static float rotate_y = 0;
+  GLfloat light0_position[] = { -10, 10, 0, 0 };
 
   glLoadIdentity();
   gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
+
+  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, WHITE);
 
   rotate_x += .1 * 360 * delta_time;
   if (rotate_x > 360) {
@@ -209,6 +222,7 @@ int main() {
 
   /* draw while the Esc key hasn't been pressed and the window is open */
   glMatrixMode(GL_MODELVIEW);
+  glShadeModel(GL_SMOOTH);
   set_wireframe(0);
   set_shape(shape_type, shape_cardinality);
   prev_time = glfwGetTime();
