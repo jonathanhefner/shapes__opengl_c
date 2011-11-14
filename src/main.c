@@ -123,6 +123,7 @@ static void set_shape(ShapeType type, int cardinality) {
         shape_antiprism(cardinality);
         break;
     }
+    shape_compute_normals(shape);
 
     shape_type = type;
     shape_cardinality = cardinality;
@@ -205,7 +206,7 @@ int main() {
 
   glfwEnable(GLFW_KEY_REPEAT);
   glfwSetKeyCallback(handle_keyboard);
-  
+
   /* draw while the Esc key hasn't been pressed and the window is open */
   glMatrixMode(GL_MODELVIEW);
   set_wireframe(0);

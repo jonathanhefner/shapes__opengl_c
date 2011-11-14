@@ -27,6 +27,7 @@ typedef GLfloat vec3[3];
 
 typedef struct _Vertex {
   vec3 position;
+  vec3 normal;
 } Vertex;
 
 typedef struct _Surface {
@@ -45,6 +46,7 @@ typedef struct _Shape {
 
 Shape* shape_define(Shape* existing_shape, int surface_count, .../* int ith_surface_type, int ith_vertex_count */);
 void shape_position_vertex(Shape* shape, int surface_id, int vertex_id, float x, float y, float z);
+void shape_compute_normals(Shape* shape);
 void shape_draw(Shape* shape);
 
 
