@@ -166,9 +166,17 @@ static void draw(double delta_time) {
   gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
 
   rotate_x += .1 * 360 * delta_time;
+  if (rotate_x > 360) {
+    rotate_x -= 360;
+  }
   glRotatef(rotate_x, 1, 0, 0);
+
   rotate_y += .2 * 360 * delta_time;
+  if (rotate_y > 360) {
+    rotate_y -= 360;
+  }
   glRotatef(rotate_y, 0, 1, 0);
+
   shape_draw(shape);
 }
 
