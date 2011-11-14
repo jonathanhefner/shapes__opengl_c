@@ -33,7 +33,14 @@ static int shape_cardinality = 3;
 
 
 static void set_wireframe(int enable) {
-  glPolygonMode(GL_FRONT_AND_BACK, enable ? GL_LINE : GL_FILL);
+  if (enable) {
+    glDisable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  } else {
+    glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT, GL_FILL);
+  }
+
   wireframe = enable;
 }
 
@@ -48,8 +55,15 @@ void shape_pyramid(int n) {
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
   for (i = 0; i < n + 1; i += 1) {
-    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+    /* we assign points around top such that it faces outward */
+    /* NOTE UNIT_X and UNIT_Y go counter-clockwise around the unit circle, BUT
+        we are using UNIT_Y as our Z value (since we're describing the top face,
+        existing mostly in the XZ plane).  The positive Z-axis comes out towards
+        our camera; thus, when looking upon the top from outside the shape,
+        following UNIT_X, UNIT_Y in-order takes you clockwise around the top.
+        Hence, for the top, we reverse the vertex order. */
     shape_position_vertex(shape, BTM, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, TOP, n + 1 - i, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
   }
 }
 
@@ -65,10 +79,12 @@ void shape_prism(int n) {
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
   for (i = 0; i < n + 1; i += 1) {
-    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
+    /* we assign points around top and sides such that they face outward (see note in shape_pyramid) */
     shape_position_vertex(shape, BTM, i + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
-    shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
-    shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i, n), -1.0, UNIT_Y(i, n));
+
+    shape_position_vertex(shape, TOP, n + 1 - i, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
+    shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X(i, n), 1.0, UNIT_Y(i, n));
   }
 }
 
@@ -84,11 +100,12 @@ static void shape_antiprism(int n) {
   shape_position_vertex(shape, TOP, 0, 0.0, 1.0, 0.0);
   shape_position_vertex(shape, BTM, 0, 0.0, -1.0, 0.0);
   for (i = 0; i < n + 1; i += 1) {
-    shape_position_vertex(shape, TOP, i + 1, UNIT_X(i * 2, n * 2), 1.0, UNIT_Y(i * 2, n * 2));
-    shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i * 2, n * 2), 1.0, UNIT_Y(i * 2, n * 2));
+    /* we assign points around top and sides such that they face outward (see note in shape_pyramid) */
+    shape_position_vertex(shape, BTM, i + 1, UNIT_X(i * 2, n * 2), -1.0, UNIT_Y(i * 2, n * 2));
+    shape_position_vertex(shape, SIDES, i * 2, UNIT_X(i * 2, n * 2), -1.0, UNIT_Y(i * 2, n * 2));
 
-    shape_position_vertex(shape, BTM, i + 1, UNIT_X((i * 2) + 1, n * 2), -1.0, UNIT_Y((i * 2) + 1, n * 2));
-    shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X((i * 2) + 1, n * 2), -1.0, UNIT_Y((i * 2) + 1, n * 2));
+    shape_position_vertex(shape, TOP, n + 1 - i, UNIT_X((i * 2) + 1, n * 2), 1.0, UNIT_Y((i * 2) + 1, n * 2));
+    shape_position_vertex(shape, SIDES, (i * 2) + 1, UNIT_X((i * 2) + 1, n * 2), 1.0, UNIT_Y((i * 2) + 1, n * 2));
   }
 }
 
@@ -184,6 +201,7 @@ int main() {
   
   /* draw while the Esc key hasn't been pressed and the window is open */
   glMatrixMode(GL_MODELVIEW);
+  set_wireframe(0);
   set_shape(shape_type, shape_cardinality);
   prev_time = glfwGetTime();
   while(!glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED)) {
