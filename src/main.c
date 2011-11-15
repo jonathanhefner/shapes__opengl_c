@@ -222,6 +222,8 @@ int main() {
 
   /* rendering setup */
   glShadeModel(GL_SMOOTH);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
   glEnable(GL_LIGHT0);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, WHITE);
   set_wireframe(0);

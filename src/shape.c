@@ -67,6 +67,11 @@ Shape* shape_define(Shape* existing_shape, int surface_count, .../* int ith_surf
   }
   va_end(surface_args);
 
+  /* point GL to vertex arrays */
+  walker = (Vertex*)&(shape->surfaces[surface_count]);
+  glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &(walker->position));
+  glNormalPointer(GL_FLOAT, sizeof(Vertex), &(walker->normal));
+
   return shape;
 }
 
@@ -144,17 +149,14 @@ void shape_draw(Shape* shape) {
   int i;
   int j;
 
+  for (i = 0, j = 0; i < shape->surface_count; j += shape->surfaces[i].vertex_count, i += 1) {
+    glDrawArrays(shape->surfaces[i].type, j, shape->surfaces[i].vertex_count);
+  }
+
+  /* FOR DEBUGGING: draw vertex normals */
+  #ifdef DRAW_NORMALS
   for (i = 0; i < shape->surface_count; i += 1) {
-    glBegin(shape->surfaces[i].type);
-      for (j = 0; j < shape->surfaces[i].vertex_count; j += 1) {
-
-        glNormal3fv(shape->surfaces[i].vertices[j].normal);
-        glVertex3fv(shape->surfaces[i].vertices[j].position);
-      }
-    glEnd();
-
-    /* FOR DEBUGGING: draw vertex normals */
-    #ifdef DRAW_NORMALS
+    for (j = 0; j < shape->surfaces[i].vertex_count; j += 1) {
       glColor3f(0, 255, 0);
       glBegin(GL_LINES);
         for (j = 0; j < shape->surfaces[i].vertex_count; j += 1) {
@@ -168,6 +170,7 @@ void shape_draw(Shape* shape) {
         }
       glEnd();
       glColor3f(255, 255, 255);
-    #endif
+    }
   }
+  #endif
 }
