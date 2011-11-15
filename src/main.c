@@ -167,16 +167,14 @@ static void handle_keyboard(int key, int action) {
 
 
 static void draw(double delta_time) {
+  static GLfloat light0_position[] = { -10, 10, 0, 0 };
   static float rotate_x = 0;
   static float rotate_y = 0;
-  GLfloat light0_position[] = { -10, 10, 0, 0 };
 
   glLoadIdentity();
   gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
 
-  glEnable(GL_LIGHT0);
   glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, WHITE);
 
   rotate_x += .1 * 360 * delta_time;
   if (rotate_x > 360) {
@@ -194,7 +192,7 @@ static void draw(double delta_time) {
 }
 
 
-static void window_reshape(int width, int height) {
+static void handle_reshape(int width, int height) {
   glViewport(0, 0, width, height);
 
   glMatrixMode(GL_PROJECTION);
@@ -213,18 +211,24 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
+  /* window setup */
   glfwSetWindowTitle("Shapes Demo");
-  glfwSetWindowSizeCallback(window_reshape);
-  window_reshape(640, 480);
+  glfwSetWindowSizeCallback(handle_reshape);
+  handle_reshape(640, 480);
 
+  /* input setup */
   glfwEnable(GLFW_KEY_REPEAT);
   glfwSetKeyCallback(handle_keyboard);
 
-  /* draw while the Esc key hasn't been pressed and the window is open */
-  glMatrixMode(GL_MODELVIEW);
+  /* rendering setup */
   glShadeModel(GL_SMOOTH);
+  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, WHITE);
   set_wireframe(0);
   set_shape(shape_type, shape_cardinality);
+
+  /* draw while the Esc key hasn't been pressed and the window is open */
+  glMatrixMode(GL_MODELVIEW);
   prev_time = glfwGetTime();
   while(!glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED)) {
     time = glfwGetTime();
