@@ -15,9 +15,9 @@ const GLenum LIGHT_ENUM[LIGHT_COUNT] = {
 };
 
 const GLfloat LIGHT_COLOR[LIGHT_COUNT][4] = {
-  { 10, 0, 0, 1 },
-  { 0, 10, 0, 1 },
-  { 0, 0, 10, 1 }
+  { 1.5, 0, 0, 1 },
+  { 0, 1.5, 0, 1 },
+  { 0, 0, 1.5, 1 }
 };
 
 
@@ -175,9 +175,9 @@ static void handle_keyboard(int key, int action) {
 
 
 static void draw(double delta_time) {
-  const GLfloat light_position[] = { 0, 1.75, 0, 0 };
+  const GLfloat light_position[] = { 0, 1, 0, 0 };
   const GLfloat light_tilt[LIGHT_COUNT] = { 45, -45, 180 };
-  static GLfloat light_rotate[LIGHT_COUNT] = { 40, 5, 70 };
+  static GLfloat light_rotate[LIGHT_COUNT] = { 45, 90, 0 };
   static float rotate_x = 0;
   static float rotate_y = 0;
   int i;
@@ -189,7 +189,7 @@ static void draw(double delta_time) {
     for (i = 0; i < LIGHT_COUNT; i += 1) {
       glPushMatrix();
       glRotatef(light_tilt[i], 0, 0, 1);
-      light_rotate[i] += .2 * 360 * delta_time;
+      light_rotate[i] += .8 * 360 * delta_time;
       if (light_rotate[i] > 360) {
         light_rotate[i] -= 360;
       }
