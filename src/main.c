@@ -7,10 +7,19 @@
   #define PI 3.14159
 #endif
 
-const GLfloat RED[]   = { 10, 0, 0, 1 };
-const GLfloat GREEN[] = { 0, 10, 0, 1 };
-const GLfloat BLUE[]  = { 0, 0, 10, 1 };
-const GLfloat WHITE[] = { 1, 1, 1, 1 };
+
+#define LIGHT_COUNT 3
+
+const GLenum LIGHT_ENUM[LIGHT_COUNT] = {
+  GL_LIGHT0, GL_LIGHT1, GL_LIGHT2
+};
+
+const GLfloat LIGHT_COLOR[LIGHT_COUNT][4] = {
+  { 10, 0, 0, 1 },
+  { 0, 10, 0, 1 },
+  { 0, 0, 10, 1 }
+};
+
 
 /* computes coords of Ith point on a unit "circle" with N faces */
 #define UNIT_X(FACE_I, FACE_N) (cosf((2.0f * PI * (FACE_I)) / (FACE_N)))
@@ -29,7 +38,6 @@ typedef enum _ShapeType {
 
 
 static Shape* shape = NULL;
-
 
 /***** Settings *****/
 static int wireframe = 0;
@@ -167,14 +175,32 @@ static void handle_keyboard(int key, int action) {
 
 
 static void draw(double delta_time) {
-  static GLfloat light0_position[] = { -10, 10, 0, 0 };
+  const GLfloat light_position[] = { 0, 1.75, 0, 0 };
+  const GLfloat light_tilt[LIGHT_COUNT] = { 45, -45, 180 };
+  static GLfloat light_rotate[LIGHT_COUNT] = { 40, 5, 70 };
   static float rotate_x = 0;
   static float rotate_y = 0;
+  int i;
 
   glLoadIdentity();
-  gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
+  gluLookAt(0, 1, 5, 0, 0, 0, 0, 1, 0);
 
-  glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+  if (!wireframe) {
+    for (i = 0; i < LIGHT_COUNT; i += 1) {
+      glPushMatrix();
+      glRotatef(light_tilt[i], 0, 0, 1);
+      light_rotate[i] += .2 * 360 * delta_time;
+      if (light_rotate[i] > 360) {
+        light_rotate[i] -= 360;
+      }
+      glRotatef(light_rotate[i], 1, 0, 0);
+      glLightfv(LIGHT_ENUM[i], GL_POSITION, light_position);
+      /* glBegin(GL_POINTS);
+        glVertex3fv(light_position);
+      glEnd(); */
+      glPopMatrix();
+    }
+  }
 
   rotate_x += .1 * 360 * delta_time;
   if (rotate_x > 360) {
@@ -205,8 +231,9 @@ static void handle_reshape(int width, int height) {
 int main() {
   double prev_time;
   double time;
+  int i;
 
-  if(!glfwInit() || !glfwOpenWindow(640, 480, 0, 0, 0, 0, 0, 0, GLFW_WINDOW)) {
+  if(!glfwInit() || !glfwOpenWindow(640, 480, 0, 0, 0, 0, 8, 0, GLFW_WINDOW)) {
     glfwTerminate();
     exit(EXIT_FAILURE);
   }
@@ -222,10 +249,16 @@ int main() {
 
   /* rendering setup */
   glShadeModel(GL_SMOOTH);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_POINT_SMOOTH);
+  glPointSize(10);
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
-  glEnable(GL_LIGHT0);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, WHITE);
+  for (i = 0; i < LIGHT_COUNT; i += 1) {
+    glEnable(LIGHT_ENUM[i]);
+    glLightfv(LIGHT_ENUM[i], GL_DIFFUSE, LIGHT_COLOR[i]);
+    glLightfv(LIGHT_ENUM[i], GL_SPECULAR, LIGHT_COLOR[i]);
+  }
   set_wireframe(0);
   set_shape(shape_type, shape_cardinality);
 
