@@ -1,6 +1,5 @@
 solution "Shapes"
-  location ("build/" .. os.get() .. (_ACTION and ("/" .. _ACTION) or ""))
-  targetdir ("bin/" .. os.get())
+  targetdir "bin"
   kind "ConsoleApp"
   language "C"
   configurations { "Debug", "Release" }
