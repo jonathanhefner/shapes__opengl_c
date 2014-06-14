@@ -1,7 +1,2 @@
 # Ignore binaries
 bin/
-
-# Ignore build files, except make files on Linux (for convenience)
-build/
-!build/linux/gmake/
-
