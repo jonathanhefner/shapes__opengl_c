@@ -34,7 +34,7 @@ Shape* shape_define(Shape* existing_shape, int surface_count, .../* int ith_surf
   va_list surface_args;
   Shape* shape;
   Vertex* walker;
-  int memsize;
+  size_t memsize;
   int i;
 
   /* compute full size with each surface's vertices */
