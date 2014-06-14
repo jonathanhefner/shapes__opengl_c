@@ -1,5 +1,6 @@
 solution "Shapes"
   targetdir "bin"
+  objdir "bin/obj"
   kind "ConsoleApp"
   language "C"
   configurations { "Debug", "Release" }
