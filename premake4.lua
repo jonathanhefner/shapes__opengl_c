@@ -10,7 +10,7 @@ solution "GLDemo_Shapes"
     flags { "OptimizeSpeed" }
 
   project "gldemo_shapes"
-    links { "GL", "GLU", "glfw" }
+    links { "m", "GL", "GLU", "glfw" }
     files { "src/*.h", "src/*.c" }
 
 
